@@ -1,31 +1,29 @@
-# Laboratorio de Infraestructura: Proxy Inverso y Balanceo de Carga con Docker
+# Cluster de Microservicios con Balanceo de Carga (Nginx + Docker)
 
-Este proyecto demuestra la implementación de una arquitectura de microservicios utilizando **Docker** y **Nginx** como Proxy Inverso de Capa 7. El objetivo principal es simular un entorno de producción con alta disponibilidad y resolución de nombres mediante Virtual Hosting.
+Este proyecto documenta la migración de servicios nativos en Ubuntu a una arquitectura de contenedores de alta disponibilidad, implementando un Proxy Inverso con capacidad de **Virtual Hosting** y **Escalabilidad Horizontal**.
 
-## 🚀 Arquitectura del Proyecto
+## 🏗️ Arquitectura de Red
 
-La infraestructura se divide en dos capas principales conectadas por una red virtual aislada:
+Se implementó una red virtual externa de tipo **bridge** denominada `web_network`. 
 
-1.  **Capa de Entrada (Edge):** Un contenedor Nginx que actúa como Proxy Inverso, gestionando certificados (simulados) y ruteo por nombre de dominio.
-2.  **Capa de Aplicación (Backend):** Un clúster de contenedores Nginx Alpine escalados dinámicamente para demostrar balanceo de carga.
+* **Aislamiento:** Los contenedores backend no exponen puertos al host.
+* **Resolución DNS:** El proxy se comunica con los backends mediante sus nombres de servicio internos de Docker.
 
 
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Componentes Técnicos
 
-* **Docker & Docker Compose:** Orquestación de contenedores.
-* **Nginx:** Proxy inverso y balanceador de carga (Round Robin).
-* **Linux (Ubuntu Server):** Host de infraestructura.
+### 1. Proxy Inverso y Balanceo (Capa 7)
+Ubicado en `/proxy`, utiliza Nginx para distribuir el tráfico.
+* **Algoritmo:** Round Robin (por defecto).
+* **Failover:** Implementación de `proxy_next_upstream` para asegurar que el tráfico se redirija a instancias sanas en caso de fallo de un contenedor.
 
-## 📋 Características Implementadas
+### 2. Cluster de Aplicaciones (Backend)
+Ubicado en `/cluster-apps`, utiliza imágenes ligeras `nginx:alpine`.
+* **Escalabilidad:** Diseñado para escalar horizontalmente de forma dinámica.
 
-* **Virtual Hosting:** Gestión de múltiples dominios (`app1.test`, `app2.test`) bajo una sola dirección IP.
-* **Networking Aislado:** Uso de una red bridge externa (`web_network`) para comunicación inter-container segura sin exponer puertos de backend al host.
-* **Escalabilidad Horizontal:** Despliegue de réplicas dinámicas mediante la directiva `--scale` de Docker Compose.
-* **Alta Disponibilidad (HA):** Configuración de `upstream` para failover automático en caso de caída de nodos.
+## 🚀 Guía de Despliegue
 
-## 🔧 Configuración del Entorno
-
-### 1. Preparación de la Red
+### Paso 1: Preparar la Red
 ```bash
 docker network create web_network
